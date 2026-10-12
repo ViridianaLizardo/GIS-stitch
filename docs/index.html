@@ -162,6 +162,41 @@
   a { color: var(--foco); }
 
   .firma { margin: 14px 0 0; font-size: 0.98rem; }
+  .boton-porque {
+    margin-top: 14px; font-family: var(--pixel); font-weight: 600; font-size: 1.15rem; cursor: pointer;
+    color: var(--papel); background: var(--hilo); padding: 8px 18px;
+    border: 3px solid; border-color: #f0b98f #5c1c0d #5c1c0d #f0b98f; box-shadow: 2px 2px 0 #3d2a16;
+  }
+  .boton-porque:active { border-color: #5c1c0d #f0b98f #f0b98f #5c1c0d; box-shadow: none; transform: translate(2px, 2px); }
+
+  /* Ventana de diálogo "¿Por qué...?" */
+  dialog.ventana-dialogo {
+    width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0;
+    background: var(--panel); color: var(--tinta);
+    border: 2px solid; border-color: var(--luz) var(--sombra) var(--sombra) var(--luz);
+    box-shadow: 4px 4px 0 #6f6047;
+  }
+  dialog.ventana-dialogo::backdrop { background: rgba(46, 36, 24, 0.45); }
+  dialog .barra {
+    position: sticky; top: 0; font-family: var(--pixel); font-size: 0.95rem;
+    background: var(--tinta); color: var(--papel); padding: 3px 4px 3px 10px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  dialog .barra button {
+    font: inherit; font-size: 0.85rem; color: var(--tinta); background: var(--panel); cursor: pointer; padding: 1px 8px;
+    border: 2px solid; border-color: var(--luz) var(--sombra) var(--sombra) var(--luz);
+  }
+  dialog .texto-largo { background: var(--papel); margin: 10px; padding: 18px 22px; overflow-y: auto; max-height: calc(100vh - 120px);
+    border: 2px solid; border-color: var(--sombra) var(--luz) var(--luz) var(--sombra); }
+  dialog .texto-largo h2 { margin-top: 0; }
+  dialog .barra button { white-space: nowrap; flex: none; }
+  @media (max-width: 600px) { dialog .texto-largo { margin: 6px; padding: 12px 14px; } }
+  dialog .texto-largo h3 { font-family: var(--pixel); font-weight: 600; font-size: 1.15rem; margin: 22px 0 6px; }
+  dialog .texto-largo p, dialog .texto-largo li { max-width: 66ch; }
+  dialog .texto-largo .estribillo { font-family: var(--pixel); font-size: 1.1rem; color: var(--hilo); margin: 6px 0; }
+
+  .comparte-bordado { margin-top: 14px; padding: 12px 14px; }
+  .hashtag { font-family: var(--pixel); font-weight: 600; font-size: 1.3rem; color: var(--hilo); }
   .firma a { font-weight: 700; }
 
   .nota-hilos { font-size: 0.88rem; color: var(--tinta-suave); margin: 8px 0 0; }
@@ -199,7 +234,7 @@
     @page { size: A4 landscape; margin: 10mm; }
     body { background: white; font-size: 10pt; }
     header, .pregunta, .controles, .descargas, section.notas, footer p:last-child, .tip, .aviso, .resultado, .ventanas,
-    .debajo > div:last-child h2, .compartir, .estado-compartir, #ventana-serie, .ventana > .barra, .banners, .firma, .enlaces-proyecto { display: none !important; }
+    .debajo > div:last-child h2, .compartir, .estado-compartir, #ventana-serie, .ventana > .barra, .banners, .firma, .enlaces-proyecto, .boton-porque, dialog, .comparte-bordado { display: none !important; }
     .solo-impresion { display: block; font-family: var(--pixel); font-size: 14pt; margin: 0 0 4mm; }
     main { max-width: none; padding: 0; }
     .ventana, .bisel { border: 0 !important; box-shadow: none !important; background: none !important; margin: 0 !important; }
@@ -222,6 +257,7 @@
   <header>
     <h1><span class="oculto">GIS-stitch</span><svg id="titulo-bordado" aria-hidden="true"></svg></h1>
     <p class="bajada texto">Visualiza el cambio climático de México durante tu vida y genera un patrón para bordar en punto de cruz. Cada puntada representa un área de 55 x 55 km (resolución de 0.5º). Incluye datos de 1958 a 2025.</p>
+    <button type="button" class="boton-porque" id="abrir-porque">¿Por qué hice este proyecto?</button>
     <p class="firma">Una pieza de <a href="https://viridianalizardo.github.io/">Viridiana Lizardo</a>: bióloga, investigadora y bordadora de datos.</p>
   </header>
 
@@ -290,8 +326,7 @@
       <p>Para cada cuadro se promedian los 10 años que empiezan en tu año de nacimiento y los 10 años más recientes.</p>
       <p>Este promedio evita que eventos atípicos, como una sequía o un El Niño, afecten el resultado. Por esta razón, sólo se puede calcular hasta 2006.</p>
       <p>La temperatura se representa como cambio en grados centígrados y la precipitación como diferencia porcentual.</p>
-      <!-- PON AQUÍ el enlace a la entrada del blog -->
-      <p><a href="#" id="enlace-post">Más sobre el análisis de datos</a></p>
+      <p><a href="https://viridianalizardo.github.io/posts/2026-10-12-gis-stitch/" id="enlace-post">Más sobre el análisis de datos</a></p>
     </div>
     <div>
       <h2>Origen de los datos</h2>
@@ -305,6 +340,16 @@
       <h2>Invitación</h2>
       <p>Descarga y borda este mapa, haz un registro físico del cambio climático que has experimentado en tu propia vida.</p>
       <p>Comparte tu experiencia con otros.</p>
+      <div class="comparte-bordado bisel">
+        <p style="margin:0 0 6px">¿Ya lo bordaste? Sube una foto con</p>
+        <p style="margin:0 0 10px"><span class="hashtag">#GISstitch</span></p>
+        <div class="compartir">
+          <button type="button" id="copiar-hashtag">Copiar #GISstitch</button>
+          <!-- Opcional: un formulario (p. ej. Google Forms) para recibir fotos. Pon su enlace aquí y quita el atributo hidden. -->
+          <a class="banner-chico" href="#" id="enlace-formulario" hidden>Envíame tu bordado</a>
+        </div>
+        <p class="estado-compartir" id="estado-hashtag" aria-live="polite"></p>
+      </div>
       <p>Que no se olvide que prometimos no sobrepasar el incremento de 1.5º respecto a la temperatura media pre industrial.</p>
       <p>En México, este límite se excedió en 2024.</p>
     </div>
@@ -326,12 +371,39 @@
     <p class="enlaces-proyecto">
       <!-- PON AQUÍ el enlace al repositorio de GitHub -->
       <a href="#" id="enlace-repo">Código en GitHub</a>
-      <a href="#" id="enlace-post-pie">Más sobre el análisis de datos</a>
+      <a href="https://viridianalizardo.github.io/posts/2026-10-12-gis-stitch/" id="enlace-post-pie">Más sobre el análisis de datos</a>
       <span>Código bajo licencia MIT.</span>
     </p>
     <p>GIS-stitch, hecho por Viridiana Lizardo.</p>
   </footer>
 </main>
+
+<dialog class="ventana-dialogo" id="porque" aria-labelledby="titulo-porque">
+  <div class="barra"><span id="titulo-porque">¿Por qué hice este proyecto?</span><button type="button" id="cerrar-porque">✕ Cerrar</button></div>
+  <div class="texto-largo">
+    <h2>Cambio climático en mi tiempo de vida</h2>
+    <p>Nací en 1989. Un año antes, se estableció el Panel Intergubernamental sobre el Cambio Climático (<a href="https://www.ipcc.ch/">IPCC</a>, por sus siglas en inglés). Cuando yo cumplí 14 meses de edad, completó su primer reporte: estaban seguros de que las emisiones de gases de invernadero resultantes de las actividades humanas estaban aumentando la temperatura promedio del planeta. Predijeron que bajo el panorama de "Business as usual" (o seguir haciendo lo de siempre), la temperatura aumentaría 0.3º C por década y que ya había aumentado hasta 0.6º C durante los últimos 100 años.</p>
+    <p>Para 2015, se firmó el Acuerdo de París dónde se acordó un esfuerzo conjunto para evitar llegar al aumento de <a href="https://www.ipcc.ch/site/assets/uploads/sites/2/2019/06/SR15_Headline-statements.pdf">1.5º C</a>. Oficialmente se anunció este <a href="https://www.unep.org/news-and-stories/press-release/unep-world-set-cross-15degc-global-warming-can-still-limit-adapt-and">2 de septiembre de 2026</a>, que hemos pasado ese umbral. Los riesgos e impactos por encima de los 1.5 °C se intensifican (súbita o gradualmente) con cada fracción adicional de grado.</p>
+    <p>Efectos que podría causar esto:</p>
+    <ul>
+      <li>La intensificación de los fenómenos meteorológicos extremos.</li>
+      <li>Los glaciares podrían perder más de una cuarta parte de su masa para 2100, elevando el nivel del mar 12.5 cm.</li>
+      <li>Graves daños para la salud humana, la seguridad alimentaria, los suministros de agua, la naturaleza, las ciudades, las infraestructuras y las economías.</li>
+      <li>La producción mundial de alimentos podría disminuir hasta un 14 % para 2050 en ausencia de medidas eficaces de adaptación.</li>
+      <li>Cambios irreversibles en las capas de hielo, en la circulación de vuelco meridional del Atlántico y en el bosque lluvioso amazónico.</li>
+    </ul>
+    <p>Según la <a href="https://cambioclimatico.unam.mx/mexico-climatico/">UNAM</a>, ya tenemos un aumento de 1.9º C en México y está aumentando 0.5º C por década. Más que el promedio mundial. En cuanto a condiciones locales, en Zacatecas, dónde nací, diciembre y mayo son 2.7º C más cálidos. Pero en Sonora, el invierno es hasta 4º C más cálido.</p>
+    <p>Como parte de la normatividad establecida por la Organización Meteorológica Mundial, el Servicio Meteorológico Nacional realiza el cálculo de las normales climatológicas, cada 10 años para un periodo consecutivo de 30 años.</p>
+    <p class="estribillo">En mi tiempo de vida, se han calculado al menos tres climatologías, y ha pasado un periodo completo.</p>
+    <p class="estribillo">En mi tiempo de vida los tomadores de decisiones firmaron una promesa y la rompieron.</p>
+    <p class="estribillo">En mi tiempo de vida la humanidad está destruyendo su hogar, el que compartimos con tantos otros seres.</p>
+    <h3>¿Hay esperanza?</h3>
+    <p>Se propone una estrategia de llegar al punto máximo y descenso para lograr que las temperaturas vuelvan a situarse en o por debajo de los 1.5 °C de sobrepaso antes de finales de siglo.</p>
+    <p>En este año se están calculando los nuevos escenarios climáticos a futuro, se están haciendo planes de adaptación y mitigación a nivel nacional y global. De acuerdo con el <a href="https://www.unep.org/resources/limiting-overshoot-navigating-exceedance">informe</a>, la clave está en una acción rápida, colectiva y global con firme voluntad política y multilateralismo, que incluyan políticas eficaces, gobernanza inclusiva y el financiamiento adecuado.</p>
+    <p>Este año me ha tocado trabajar en describir cómo ha cambiado México con datos. Es devastador pero, al menos, me ha tocado vida para hacer algo al respecto. Este año voy a hacer un registro del cambio climático que ha habido en mi vida, esperando que sea un punto de inflexión. Para eso desarrollé GIS-stitch.</p>
+    <p><a href="https://viridianalizardo.github.io/posts/2026-10-12-gis-stitch/">Más sobre el análisis de datos</a></p>
+  </div>
+</dialog>
 
 <script src="datos.js"></script>
 <script>
@@ -691,11 +763,11 @@
   const avisar = (txt) => { $("estado-compartir").textContent = txt; };
   function mensaje() {
     const R = estado.res;
-    if (R.falta) return "Mi mapa del clima todavía se está bordando. Calcula el tuyo y llévate el patrón:";
+    if (R.falta) return "Mi mapa del clima todavía se está bordando. Calcula el tuyo y llévate el patrón #GISstitch:";
     const desde = "desde que nací (" + estado.anio + ")";
     return R.v === "temperatura"
-      ? "México se calentó " + fmt(R.nacional, 1) + " °C " + desde + ". Calcula el tuyo y llévate el patrón para bordarlo:"
-      : "En México llueve " + fmt(Math.abs(R.nacional), 0) + " % " + (R.nacional >= 0 ? "más" : "menos") + " " + desde + ". Calcula el tuyo y llévate el patrón para bordarlo:";
+      ? "México se calentó " + fmt(R.nacional, 1) + " °C " + desde + ". Calcula el tuyo y llévate el patrón para bordarlo #GISstitch:"
+      : "En México llueve " + fmt(Math.abs(R.nacional), 0) + " % " + (R.nacional >= 0 ? "más" : "menos") + " " + desde + ". Calcula el tuyo y llévate el patrón para bordarlo #GISstitch:";
   }
   async function copiar(txt) {
     try { await navigator.clipboard.writeText(txt); return true; }
@@ -705,6 +777,13 @@
       ta.remove(); return ok;
     }
   }
+  $("abrir-porque").addEventListener("click", () => $("porque").showModal());
+  $("cerrar-porque").addEventListener("click", () => $("porque").close());
+  $("porque").addEventListener("click", (e) => { if (e.target === $("porque")) $("porque").close(); });   // clic fuera
+  $("copiar-hashtag").addEventListener("click", async () => {
+    $("estado-hashtag").textContent = (await copiar("#GISstitch")) ? "Copiado. ¡Queremos ver tu bordado!" : "No se pudo copiar.";
+  });
+
   $("whatsapp").addEventListener("click", () => {
     window.open("https://wa.me/?text=" + encodeURIComponent(mensaje() + " " + enlaceActual()), "_blank", "noopener");
   });
