@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GIS-stitch</title>
+<meta name="description" content="Escribe tu año de nacimiento y borda cuánto cambió el clima de México desde entonces.">
+<!-- Vista previa al compartir. Las URL deben ser absolutas: VERIFICA que coincidan con tu GitHub Pages. -->
+<link rel="canonical" href="https://viridianalizardo.github.io/GIS_stitch/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_MX">
+<meta property="og:site_name" content="GIS-stitch">
+<meta property="og:title" content="GIS-stitch · El clima de tu vida, en punto de cruz">
+<meta property="og:description" content="¿Cuánto cambió el clima de México desde que naciste? Calcúlalo y descarga tu patrón para bordarlo.">
+<meta property="og:url" content="https://viridianalizardo.github.io/GIS_stitch/">
+<meta property="og:image" content="https://viridianalizardo.github.io/GIS_stitch/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Mapa de México bordado en punto de cruz con el cambio de temperatura desde 1989.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://viridianalizardo.github.io/GIS_stitch/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fondo: #e6dbc2;         /* beige de gabinete de computadora noventera */
+    --fondo-hoyo: #d3c5a6;    /* puntos de la tela Aida */
+    --panel: #d8cbac;         /* cromo de ventana */
+    --papel: #faf5e9;         /* tela del bastidor */
+    --tinta: #2e2418;         /* café oscuro: texto */
+    --tinta-suave: #66563f;
+    --luz: #fffbf1;           /* bisel claro */
+    --sombra: #9a8866;        /* bisel oscuro */
+    --hilo: #92351e;          /* hilo rojo óxido (OKeeffe2) */
+    --foco: #1d4e89;          /* azul de enlace de los noventa */
+    --pixel: "Pixelify Sans", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    color: var(--tinta);
+    background-color: var(--fondo);
+    background-image: radial-gradient(circle at 50% 50%, var(--fondo-hoyo) 0.9px, transparent 1.4px);
+    background-size: 7px 7px;
+    font-family: "Atkinson Hyperlegible", Verdana, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 0 16px 64px; }
+  .texto { max-width: 66ch; }
+  .oculto {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  /* Bisel de los noventa: claro arriba-izquierda, oscuro abajo-derecha */
+  .bisel {
+    background: var(--panel);
+    border: 2px solid; border-color: var(--luz) var(--sombra) var(--sombra) var(--luz);
+    box-shadow: 1px 1px 0 #6f6047;
+  }
+  .hundido { border-color: var(--sombra) var(--luz) var(--luz) var(--sombra); box-shadow: none; }
+
+  header { padding: 48px 0 8px; }
+  h1 { margin: 0 0 18px; line-height: 0; }
+  #titulo-bordado { display: block; width: min(100%, 620px); height: auto; }
+  .bajada { font-size: 1.12rem; color: var(--tinta-suave); margin: 0; }
+
+  h2 { font-family: var(--pixel); font-weight: 600; font-size: 1.35rem; line-height: 1.2; margin: 0 0 10px; }
+
+  /* La frase-control */
+  .pregunta {
+    font-family: var(--pixel);
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    line-height: 1.2;
+    margin: 36px 0 6px;
+  }
+  .pregunta input {
+    font: inherit; color: var(--hilo);
+    width: 4.4ch; padding: 0 0.15ch; margin-left: 0.15ch;
+    background: var(--papel);
+    border: 2px solid; border-color: var(--sombra) var(--luz) var(--luz) var(--sombra);
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .pregunta input::-webkit-outer-spin-button,
+  .pregunta input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .pregunta input:focus { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+  .controles { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin: 18px 0 8px; }
+  .grupo { display: inline-flex; gap: 4px; }
+  .grupo button, .descargas button {
+    font: inherit; font-size: 0.95rem; color: var(--tinta); cursor: pointer;
+    background: var(--panel); padding: 6px 14px;
+    border: 2px solid; border-color: var(--luz) var(--sombra) var(--sombra) var(--luz);
+    box-shadow: 1px 1px 0 #6f6047;
+  }
+  .grupo button[aria-pressed="true"], .grupo button:active, .descargas button:active {
+    border-color: var(--sombra) var(--luz) var(--luz) var(--sombra);
+    box-shadow: none; background: #cdbf9e; font-weight: 700;
+  }
+  .descargas button.principal { background: var(--tinta); color: var(--papel); border-color: #6b5a44 #120d07 #120d07 #6b5a44; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+  .resultado { font-size: 1.25rem; margin: 22px 0 4px; max-width: 60ch; }
+  .resultado strong { font-family: var(--pixel); font-weight: 600; font-size: 1.55em; color: var(--hilo); }
+  .ventanas { color: var(--tinta-suave); margin: 0 0 18px; }
+
+  .aviso { margin: 0 0 14px; padding: 12px 14px; max-width: 70ch; }
+  .aviso[hidden] { display: none; }
+
+  /* Ventanas tipo programa de los noventa */
+  .ventana { margin: 0 0 22px; padding: 0; }
+  .ventana > .barra {
+    font-family: var(--pixel); font-size: 0.95rem;
+    background: var(--tinta); color: var(--papel);
+    padding: 3px 10px; display: flex; justify-content: space-between; gap: 12px;
+  }
+  .ventana > .barra .tit { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ventana > .barra span:last-child { white-space: nowrap; flex: none; }
+  .ventana > .contenido { padding: 14px; }
+  .nota-grafica { margin: 0 0 8px; color: var(--tinta-suave); font-size: 0.95rem; }
+
+  #serie { display: block; width: 100%; height: auto; background: var(--papel); border: 2px solid; border-color: var(--sombra) var(--luz) var(--luz) var(--sombra); }
+
+  /* Bastidor */
+  .bastidor {
+    position: relative;
+    background: var(--papel);
+    border: 2px solid; border-color: var(--sombra) var(--luz) var(--luz) var(--sombra);
+    padding: 14px;
+    overflow-x: auto;
+  }
+  .bastidor svg { display: block; width: 100%; height: auto; }
+  .bastidor.patron svg { min-width: 640px; }   /* el patrón necesita detalle; en móvil se desliza */
+  .tip {
+    position: absolute; pointer-events: none; z-index: 2;
+    background: #fff8d6; color: var(--tinta); border: 1px solid var(--tinta);
+    font-size: 0.85rem; line-height: 1.35; padding: 5px 8px;
+    white-space: nowrap; display: none; box-shadow: 2px 2px 0 rgba(46, 36, 24, 0.35);
+  }
+
+  .debajo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; margin-top: 4px; }
+  @media (max-width: 760px) { .debajo { grid-template-columns: 1fr; } }
+
+  .clave { list-style: none; padding: 0; margin: 0; }
+  .clave li { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 3px 0; }
+  .clave li.vacia { opacity: 0.4; }
+  .clave svg { width: 26px; height: 26px; display: block; }
+  .clave .n { font-variant-numeric: tabular-nums; color: var(--tinta-suave); }
+  .medidas { color: var(--tinta-suave); margin: 10px 0 0; font-size: 0.95rem; }
+
+  .descargas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .formula { margin-top: 14px; font-size: 0.95rem; color: var(--tinta-suave); }
+
+  section.notas { margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+  section.notas p, section.notas li { color: #3d3122; }
+  section.notas ul { padding-left: 1.1em; margin: 0; }
+  footer { margin-top: 44px; padding-top: 14px; border-top: 2px solid var(--sombra); font-size: 0.9rem; color: var(--tinta-suave); }
+  a { color: var(--foco); }
+
+  .firma { margin: 14px 0 0; font-size: 0.98rem; }
+  .firma a { font-weight: 700; }
+
+  .nota-hilos { font-size: 0.88rem; color: var(--tinta-suave); margin: 8px 0 0; }
+  .compartir { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .compartir button {
+    font: inherit; font-size: 0.95rem; color: var(--tinta); cursor: pointer;
+    background: var(--panel); padding: 6px 14px;
+    border: 2px solid; border-color: var(--luz) var(--sombra) var(--sombra) var(--luz);
+    box-shadow: 1px 1px 0 #6f6047;
+  }
+  .compartir button:active { border-color: var(--sombra) var(--luz) var(--luz) var(--sombra); box-shadow: none; }
+  .estado-compartir { min-height: 1.4em; font-size: 0.9rem; color: var(--tinta-suave); margin: 8px 0 0; }
+
+  /* Enlaces grandes: banners de los noventa */
+  .banners { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; margin-top: 40px; }
+  .banner {
+    display: block; text-decoration: none; color: var(--papel);
+    padding: 18px 20px; position: relative;
+    border: 3px solid; border-color: #f0b98f #5c1c0d #5c1c0d #f0b98f;
+    box-shadow: 3px 3px 0 #3d2a16;
+  }
+  .banner .grande { display: block; font-family: var(--pixel); font-weight: 600; font-size: clamp(1.3rem, 2.6vw, 1.7rem); line-height: 1.15; }
+  .banner .chico { display: block; margin-top: 6px; font-size: 0.95rem; opacity: 0.92; }
+  .banner .flecha { font-family: var(--pixel); }
+  .banner:hover, .banner:focus-visible { filter: brightness(1.08); }
+  .banner:active { border-color: #5c1c0d #f0b98f #f0b98f #5c1c0d; box-shadow: none; transform: translate(3px, 3px); }
+  .banner.unam { background: #92351e; }
+  .banner.yo { background: #1d4e89; border-color: #8fb0d8 #0b2343 #0b2343 #8fb0d8; }
+  .banner.yo:active { border-color: #0b2343 #8fb0d8 #8fb0d8 #0b2343; }
+  .enlaces-proyecto { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 10px 0 0; }
+
+  /* Impresión: solo el patrón, la clave y la fórmula */
+  .solo-impresion { display: none; }
+  @media print {
+    @page { size: A4 landscape; margin: 10mm; }
+    body { background: white; font-size: 10pt; }
+    header, .pregunta, .controles, .descargas, section.notas, footer p:last-child, .tip, .aviso, .resultado, .ventanas,
+    .debajo > div:last-child h2, .compartir, .estado-compartir, #ventana-serie, .ventana > .barra, .banners, .firma, .enlaces-proyecto { display: none !important; }
+    .solo-impresion { display: block; font-family: var(--pixel); font-size: 14pt; margin: 0 0 4mm; }
+    main { max-width: none; padding: 0; }
+    .ventana, .bisel { border: 0 !important; box-shadow: none !important; background: none !important; margin: 0 !important; }
+    .ventana > .contenido { padding: 0; }
+    .bastidor { border: 0; padding: 0; }
+    .bastidor svg, .bastidor.patron svg { min-width: 0; max-height: 100mm; width: auto; margin: 0 auto; }
+    .debajo { display: block; margin-top: 4mm; break-inside: avoid; }
+    .nota-hilos { font-size: 7.5pt; margin-top: 1.5mm; }
+    footer { margin-top: 3mm; padding-top: 0; border: 0; font-size: 8pt; }
+    .clave { columns: 3; column-gap: 6mm; font-size: 8pt; }
+    .clave li { padding: 0; break-inside: avoid; }
+    .debajo h2 { font-size: 11pt; margin-bottom: 2mm; }
+    .medidas, .formula { font-size: 8.5pt; margin-top: 2mm; }
+  }
+</style>
+
+</head>
+<body>
+<main>
+  <header>
+    <h1><span class="oculto">GIS-stitch</span><svg id="titulo-bordado" aria-hidden="true"></svg></h1>
+    <p class="bajada texto">Visualiza el cambio climático de México durante tu vida y genera un patrón para bordar en punto de cruz. Cada puntada representa un área de 55 x 55 km (resolución de 0.5º). Incluye datos de 1958 a 2025.</p>
+    <p class="firma">Una pieza de <a href="https://viridianalizardo.github.io/">Viridiana Lizardo</a>: bióloga, investigadora y bordadora de datos.</p>
+  </header>
+
+  <p class="pregunta">
+    Nací en <input id="anio" type="number" inputmode="numeric" min="1958" step="1" value="1989" aria-label="Año de nacimiento">
+  </p>
+
+  <div class="controles">
+    <div class="grupo" role="group" aria-label="Variable">
+      <button type="button" data-var="temperatura" aria-pressed="true">Temperatura</button>
+      <button type="button" data-var="precipitacion" aria-pressed="false">Lluvia</button>
+    </div>
+  </div>
+
+  <p class="resultado" id="resultado" aria-live="polite"></p>
+  <p class="ventanas" id="ventanas"></p>
+  <p class="aviso bisel" id="aviso" hidden></p>
+
+  <section class="ventana bisel" id="ventana-serie" aria-labelledby="titulo-serie">
+    <div class="barra"><span class="tit" id="titulo-serie">Temperatura media de México, 1958 en adelante</span><span aria-hidden="true">▫ ▭ ✕</span></div>
+    <div class="contenido">
+      <p class="nota-grafica">Bandas: las dos ventanas de 10 años que se comparan. Línea punteada: tu año de nacimiento. Línea gris: tendencia climática suavizada.</p>
+      <svg id="serie" role="img" aria-labelledby="titulo-serie"></svg>
+    </div>
+  </section>
+
+  <p class="solo-impresion" id="titulo-impresion"></p>
+  <section class="ventana bisel">
+    <div class="barra"><span class="tit" id="titulo-mapa">Tu patrón para bordar</span><span aria-hidden="true">▫ ▭ ✕</span></div>
+    <div class="contenido">
+  <div class="bastidor" id="bastidor">
+    <svg id="mapa" role="img" aria-labelledby="resultado"></svg>
+    <div class="tip" id="tip"></div>
+  </div>
+    </div>
+  </section>
+
+  <div class="debajo">
+    <div class="ventana bisel"><div class="contenido">
+      <h2>Clave de hilos</h2>
+      <ul class="clave" id="clave"></ul>
+      <p class="medidas" id="medidas"></p>
+      <p class="nota-hilos">Hilos sugeridos: número de madeja DMC más parecido a cada color, calculado a partir de los valores de color de <a href="https://github.com/JuliaSzulc/flossverter">flossverter</a>. Es una aproximación de pantalla: compáralo con la carta de colores en la mercería. Con este número de puntadas, una madeja por color suele alcanzar.</p>
+    </div></div>
+    <div class="ventana bisel"><div class="contenido">
+      <h2>Descarga tu patrón</h2>
+      <div class="descargas">
+        <button type="button" class="principal" id="imprimir">Imprimir o guardar PDF</button>
+        <button type="button" id="png">Descargar PNG</button>
+        <button type="button" id="csv">Descargar lista de hilos (CSV)</button>
+      </div>
+      <p class="formula" id="formula"></p>
+      <h2 style="margin-top:18px">Comparte tu mapa</h2>
+      <div class="compartir">
+        <button type="button" id="whatsapp">WhatsApp</button>
+        <button type="button" id="instagram">Instagram</button>
+        <button type="button" id="copiar">Copiar enlace</button>
+      </div>
+      <p class="estado-compartir" id="estado-compartir" aria-live="polite"></p>
+    </div></div>
+  </div>
+
+  <section class="notas">
+    <div>
+      <h2>Cómo se calcula</h2>
+      <p>Para cada cuadro se promedian los 10 años que empiezan en tu año de nacimiento y los 10 años más recientes.</p>
+      <p>Este promedio evita que eventos atípicos, como una sequía o un El Niño, afecten el resultado. Por esta razón, sólo se puede calcular hasta 2006.</p>
+      <p>La temperatura se representa como cambio en grados centígrados y la precipitación como diferencia porcentual.</p>
+      <!-- PON AQUÍ el enlace a la entrada del blog -->
+      <p><a href="#" id="enlace-post">Más sobre el análisis de datos</a></p>
+    </div>
+    <div>
+      <h2>Origen de los datos</h2>
+      <ul>
+        <li>Los datos vienen de TerraClimate, un dataset que contiene datos mensuales desde 1958 hasta el presente a una resolución de ~4-km.</li>
+        <li>Cada puntada promedia unos 3,000 km².</li>
+        <li>Los cortes de color son fijos entre comparaciones. Esto permite comparar entre los mapas generados por cada persona.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Invitación</h2>
+      <p>Descarga y borda este mapa, haz un registro físico del cambio climático que has experimentado en tu propia vida.</p>
+      <p>Comparte tu experiencia con otros.</p>
+      <p>Que no se olvide que prometimos no sobrepasar el incremento de 1.5º respecto a la temperatura media pre industrial.</p>
+      <p>En México, este límite se excedió en 2024.</p>
+    </div>
+  </section>
+
+  <nav class="banners" aria-label="Enlaces">
+    <a class="banner unam" href="https://cambioclimatico.unam.mx/mexico-climatico/">
+      <span class="grande">Explora más sobre el cambio climático en México <span class="flecha" aria-hidden="true">&gt;&gt;</span></span>
+      <span class="chico">México Climático · Programa de Investigación en Cambio Climático, UNAM</span>
+    </a>
+    <a class="banner yo" href="https://viridianalizardo.github.io/">
+      <span class="grande">Hecho por Viridiana Lizardo <span class="flecha" aria-hidden="true">&gt;&gt;</span></span>
+      <span class="chico">Datos, código y punto de cruz. Conoce mi trabajo</span>
+    </a>
+  </nav>
+
+  <footer>
+    <p id="fuente"></p>
+    <p class="enlaces-proyecto">
+      <!-- PON AQUÍ el enlace al repositorio de GitHub -->
+      <a href="#" id="enlace-repo">Código en GitHub</a>
+      <a href="#" id="enlace-post-pie">Más sobre el análisis de datos</a>
+      <span>Código bajo licencia MIT.</span>
+    </p>
+    <p>GIS-stitch, hecho por Viridiana Lizardo.</p>
+  </footer>
+</main>
+
+<script src="datos.js"></script>
+<script>
+(function () {
+  "use strict";
+  const D = window.CLIMA;
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const N = 10;                 // años por ventana
+  const C = 16;                 // tamaño de celda en el SVG
+  const M = { top: 26, left: 30, right: 8, bottom: 8 };
+
+  tituloBordado();                 // no depende de los datos
+  if (!D) {
+    $("resultado").textContent = "Faltan los datos: corre analysis/03_series_anuales.R para generar docs/datos.js.";
+    return;
+  }
+
+  const anios = D.anios, primero = anios[0], ultimo = anios[anios.length - 1];
+  const nCel = D.lon.length;
+  const lonMin = Math.min(...D.lon), latMax = Math.max(...D.lat);
+  const colDe = D.lon.map((x) => Math.round((x - lonMin) / 0.5));
+  const filaDe = D.lat.map((y) => Math.round((latMax - y) / 0.5));
+  const nCol = Math.max(...colDe) + 1, nFila = Math.max(...filaDe) + 1;
+  const peso = D.lat.map((y) => Math.cos(y * Math.PI / 180));
+  const porLugar = new Map(); colDe.forEach((c, i) => porLugar.set(filaDe[i] * nCol + c, i));
+
+  // Año y variable desde el enlace (?anio=1989&var=lluvia) para compartir un mapa concreto
+  const params = new URLSearchParams(location.search);
+  const anioUrl = parseInt(params.get("anio"), 10);
+  const estado = {
+    variable: params.get("var") === "lluvia" ? "precipitacion" : "temperatura",
+    anio: Number.isFinite(anioUrl) ? anioUrl : 1989,
+    res: null
+  };
+  $("anio").value = estado.anio;
+  document.querySelectorAll("[data-var]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.var === estado.variable));
+  $("anio").max = ultimo;
+  $("fuente").textContent = "Datos: " + D.fuente + ", " + primero + "–" + ultimo + ". Colores: " +
+    D.clases.temperatura.paleta + " y " + D.clases.precipitacion.paleta + ".";
+
+  const promedio = (fila, a, b) => {           // media de los años a..b de una celda
+    let s = 0; for (let y = a; y <= b; y++) s += fila[y - primero]; return s / (b - a + 1);
+  };
+  const clase = (v, cortes) => { let k = 0; while (k < cortes.length && v > cortes[k]) k++; return k; };
+  const fmt = (x, d) => x.toLocaleString("es-MX", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const conSigno = (x, d) => (x > 0 ? "+" : x < 0 ? "−" : "") + fmt(Math.abs(x), d);
+
+  function calcular() {
+    const v = estado.variable, cl = D.clases[v], serie = D[v === "temperatura" ? "temp" : "prec"];
+    let a = Math.max(primero, Math.min(estado.anio, ultimo));
+    const fin = [ultimo - N + 1, ultimo];
+    const ini = [a, a + N - 1];
+    const falta = ini[1] >= fin[0];              // las ventanas se enciman
+    const cambio = new Array(nCel), k = new Array(nCel);
+    let sa = 0, sb = 0, sw = 0;
+    if (!falta) {
+      for (let i = 0; i < nCel; i++) {
+        const A = promedio(serie[i], ini[0], ini[1]), B = promedio(serie[i], fin[0], fin[1]);
+        cambio[i] = v === "temperatura" ? B - A : (B - A) / A * 100;
+        k[i] = clase(cambio[i], cl.cortes);
+        sa += A * peso[i]; sb += B * peso[i]; sw += peso[i];
+      }
+    }
+    const nacional = falta ? null : (v === "temperatura" ? (sb - sa) / sw : (sb - sa) / sa * 100);
+    const conteo = cl.colores.map(() => 0); if (!falta) k.forEach((c) => conteo[c]++);
+    estado.res = { v, cl, ini, fin, falta, cambio, k, nacional, conteo, a };
+  }
+
+  // ---- Símbolos (equivalentes a pch de R) ----
+  function simbolo(pch, cx, cy, r, color) {
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("stroke", color); g.setAttribute("fill", "none"); g.setAttribute("stroke-width", r * 0.28);
+    g.setAttribute("stroke-linecap", "round"); g.setAttribute("stroke-linejoin", "round");
+    const add = (tag, at) => { const e = document.createElementNS(NS, tag); for (const n in at) e.setAttribute(n, at[n]); g.appendChild(e); return e; };
+    const tri = (dir) => { const h = r * 0.95; return [[cx, cy - dir * h], [cx - h, cy + dir * h * 0.75], [cx + h, cy + dir * h * 0.75]].map((p) => p.join(",")).join(" "); };
+    const relleno = (e) => { e.setAttribute("fill", color); };
+    switch (pch) {
+      case 0: add("rect", { x: cx - r * 0.8, y: cy - r * 0.8, width: r * 1.6, height: r * 1.6 }); break;
+      case 1: add("circle", { cx, cy, r: r * 0.85 }); break;
+      case 2: add("polygon", { points: tri(1) }); break;
+      case 3: add("path", { d: `M${cx - r} ${cy}H${cx + r}M${cx} ${cy - r}V${cy + r}` }); break;
+      case 4: add("path", { d: `M${cx - r * 0.8} ${cy - r * 0.8}L${cx + r * 0.8} ${cy + r * 0.8}M${cx + r * 0.8} ${cy - r * 0.8}L${cx - r * 0.8} ${cy + r * 0.8}` }); break;
+      case 5: add("polygon", { points: `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}` }); break;
+      case 6: add("polygon", { points: tri(-1) }); break;
+      case 8: add("path", { d: `M${cx - r} ${cy}H${cx + r}M${cx} ${cy - r}V${cy + r}M${cx - r * 0.7} ${cy - r * 0.7}L${cx + r * 0.7} ${cy + r * 0.7}M${cx + r * 0.7} ${cy - r * 0.7}L${cx - r * 0.7} ${cy + r * 0.7}` }); break;
+      case 15: relleno(add("rect", { x: cx - r * 0.75, y: cy - r * 0.75, width: r * 1.5, height: r * 1.5 })); break;
+      case 16: relleno(add("circle", { cx, cy, r: r * 0.8 })); break;
+      case 17: relleno(add("polygon", { points: tri(1) })); break;
+    }
+    return g;
+  }
+  const colorSimbolo = (hex) => {
+    const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.45 ? "#ffffff" : "#000000";
+  };
+
+  // ---- Dibujo ----
+  function dibujar() {
+    const R = estado.res, svg = $("mapa");
+    $("bastidor").classList.add("patron");
+    const W = M.left + nCol * C + M.right, H = M.top + nFila * C + M.bottom;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.replaceChildren();
+    const el = (tag, at, padre = svg) => { const e = document.createElementNS(NS, tag); for (const n in at) e.setAttribute(n, at[n]); padre.appendChild(e); return e; };
+
+    el("rect", { x: 0, y: 0, width: W, height: H, fill: "#faf5e9" });   // tela
+    const capa = el("g", {});
+    for (let i = 0; i < nCel; i++) {
+      const x = M.left + colDe[i] * C, y = M.top + filaDe[i] * C;
+      if (R.falta) { el("rect", { x, y, width: C, height: C, fill: "#ffffff" }, capa); continue; }   // solo contorno
+      const col = R.cl.colores[R.k[i]];
+      el("rect", { x, y, width: C, height: C, fill: col }, capa);
+      capa.appendChild(simbolo(R.cl.simbolos[R.k[i]], x + C / 2, y + C / 2, C * 0.28, colorSimbolo(col)));
+    }
+
+    // rejilla y numeración (líneas gruesas cada 10 puntadas)
+    const rej = el("g", { stroke: "#8a7a60" });
+    for (let c = 0; c <= nCol; c++) el("line", { x1: M.left + c * C, y1: M.top, x2: M.left + c * C, y2: M.top + nFila * C, "stroke-width": c % 10 === 0 ? 1.1 : 0.3 }, rej);
+    for (let f = 0; f <= nFila; f++) el("line", { x1: M.left, y1: M.top + f * C, x2: M.left + nCol * C, y2: M.top + f * C, "stroke-width": f % 10 === 0 ? 1.1 : 0.3 }, rej);
+    const num = el("g", { fill: "#66563f", "font-size": 8, "font-family": "Atkinson Hyperlegible, sans-serif" });
+    [1, ...Array.from({ length: Math.floor(nCol / 10) }, (_, j) => (j + 1) * 10)].forEach((c) => {
+      const t = el("text", { x: M.left + (c - 0.5) * C, y: M.top - 8, "text-anchor": "middle" }, num); t.textContent = c;
+    });
+    [1, ...Array.from({ length: Math.floor(nFila / 10) }, (_, j) => (j + 1) * 10)].forEach((f) => {
+      const t = el("text", { x: M.left - 6, y: M.top + (f - 0.5) * C + 3, "text-anchor": "end" }, num); t.textContent = f;
+    });
+  }
+
+  function textos() {
+    const R = estado.res, v = R.v;
+    const et = (r) => r[0] + "–" + r[1];
+    $("ventanas").textContent = R.falta ? "" : "Tus primeros 10 años (" + et(R.ini) + ") frente a los últimos 10 (" + et(R.fin) + ").";
+    const aviso = $("aviso");
+    if (estado.anio < primero) {
+      aviso.hidden = false; aviso.textContent = "Los datos empiezan en " + primero + ", así que la comparación usa " + et(R.ini) + ".";
+    } else if (R.falta) {
+      const faltan = R.a + 2 * N - 1 - ultimo;
+      aviso.hidden = false;
+      aviso.textContent = "Hacen falta " + faltan + (faltan === 1 ? " año" : " años") +
+        " más de datos para comparar tus primeros 10 años con otros 10. Por ahora tu tela tiene solo el contorno de México.";
+    } else { aviso.hidden = true; }
+
+    let frase;
+    if (R.falta) frase = "Tu mapa todavía se está bordando.";
+    else if (v === "temperatura")
+      frase = R.nacional >= 0
+        ? "México se calentó <strong>" + fmt(R.nacional, 1) + " °C</strong> en promedio desde que naciste."
+        : "México se enfrió <strong>" + fmt(-R.nacional, 1) + " °C</strong> en promedio desde que naciste.";
+    else
+      frase = Math.round(R.nacional) === 0
+        ? "En México llueve <strong>lo mismo</strong> que en tus primeros 10 años de vida."
+        : "En México llueve <strong>" + fmt(Math.abs(R.nacional), 0) + " % " + (R.nacional > 0 ? "más" : "menos") +
+          "</strong> que en tus primeros 10 años de vida.";
+    $("resultado").innerHTML = frase;
+
+    $("titulo-mapa").textContent = R.falta ? "Tu patrón para bordar: solo el contorno" : "Tu patrón para bordar: " + R.cl.titulo.toLowerCase() + ", " + et(R.ini) + " → " + et(R.fin);
+    $("titulo-impresion").textContent = "GIS-stitch · " + R.cl.titulo + (R.falta ? "" : ": " + et(R.fin) + " frente a " + et(R.ini));
+    $("formula").textContent = R.falta ? "" : (v === "temperatura"
+      ? "Δ = media(" + et(R.fin) + ") − media(" + et(R.ini) + "), en °C"
+      : "Δ = [media(" + et(R.fin) + ") − media(" + et(R.ini) + ")] / media(" + et(R.ini) + ") × 100");
+
+    const ul = $("clave"); ul.replaceChildren();
+    R.cl.etiquetas.forEach((txt, j) => {
+      const li = document.createElement("li"); if (!R.conteo[j]) li.className = "vacia";
+      const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 26 26");
+      const r = document.createElementNS(NS, "rect");
+      Object.entries({ x: 1, y: 1, width: 24, height: 24, rx: 3, fill: R.cl.colores[j], stroke: "#8a7a60", "stroke-width": 0.6 }).forEach(([a, b]) => r.setAttribute(a, b));
+      s.appendChild(r); s.appendChild(simbolo(R.cl.simbolos[j], 13, 13, 6.5, colorSimbolo(R.cl.colores[j])));
+      const t = document.createElement("span"); t.textContent = txt + " · hilo DMC " + R.cl.dmc[j];
+      const n = document.createElement("span"); n.className = "n"; n.textContent = R.conteo[j] + " puntadas";
+      li.append(s, t, n); ul.appendChild(li);
+    });
+    const cm = (n) => fmt(n / 14 * 2.54, 1);
+    $("medidas").textContent = nCol + " × " + nFila + " puntadas; " + nCel + " por bordar. En tela Aida o cuadrillé 14ct mide " + cm(nCol) + " × " + cm(nFila) + " cm.";
+  }
+
+  // ---- Título bordado: letras de 5 × 7 puntos, cada punto una cruz ----
+  function tituloBordado() {
+    const L = {
+      G: [".###.", "#...#", "#....", "#.###", "#...#", "#...#", ".###."],
+      I: ["###", ".#.", ".#.", ".#.", ".#.", ".#.", "###"],
+      S: [".####", "#....", "#....", ".###.", "....#", "....#", "####."],
+      "-": ["....", "....", "....", "####", "....", "....", "...."],
+      T: ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
+      C: [".###.", "#...#", "#....", "#....", "#....", "#...#", ".###."],
+      H: ["#...#", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"]
+    };
+    const texto = "GIS-STITCH", c = 10, svg = $("titulo-bordado");
+    let x0 = 0, semilla = 7;
+    const azar = () => { semilla = (semilla * 9301 + 49297) % 233280; return semilla / 233280 - 0.5; };
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("stroke-linecap", "round");
+    for (const ch of texto) {
+      const glifo = L[ch];
+      glifo.forEach((fila, f) => [...fila].forEach((p, k) => {
+        if (p !== "#") return;
+        const x = (x0 + k) * c, y = f * c, j = () => azar() * 1.2, m = 1.6;
+        const cruz = document.createElementNS(NS, "g");
+        cruz.setAttribute("stroke", "#92351e"); cruz.setAttribute("stroke-width", 2.9);
+        [[x + m + j(), y + c - m + j(), x + c - m + j(), y + m + j(), 0.85],
+         [x + m + j(), y + m + j(), x + c - m + j(), y + c - m + j(), 1]].forEach(([a, b, d, e, o]) => {
+          const l = document.createElementNS(NS, "line");
+          l.setAttribute("x1", a); l.setAttribute("y1", b); l.setAttribute("x2", d); l.setAttribute("y2", e);
+          l.setAttribute("stroke-opacity", o); cruz.appendChild(l);
+        });
+        g.appendChild(cruz);
+      }));
+      x0 += glifo[0].length + 1;
+    }
+    svg.setAttribute("viewBox", `-2 -2 ${(x0 - 1) * c + 4} ${7 * c + 4}`);
+    svg.appendChild(g);
+  }
+
+  // ---- Serie nacional con ventanas y año de nacimiento ----
+  const nacionalAnual = (v) => {
+    const serie = D[v === "temperatura" ? "temp" : "prec"], sw = peso.reduce((a, b) => a + b, 0);
+    return anios.map((_, j) => { let s = 0; for (let i = 0; i < nCel; i++) s += serie[i][j] * peso[i]; return s / sw; });
+  };
+  const SERIES = { temperatura: nacionalAnual("temperatura"), precipitacion: nacionalAnual("precipitacion") };
+
+  // loess como el geom_smooth() de R: grado 2, span 0.75, pesos tricúbicos, banda ~95 %
+  function loess(x, y, span = 0.75) {
+    const n = x.length, q = Math.ceil(span * n), L = [];
+    for (let i = 0; i < n; i++) {
+      const d = x.map((xi) => Math.abs(xi - x[i])), h = [...d].sort((a, b) => a - b)[q - 1] || 1;
+      const w = d.map((di) => (di < h ? Math.pow(1 - Math.pow(di / h, 3), 3) : 0));
+      const S = Array.from({ length: 3 }, () => [0, 0, 0]);
+      for (let k = 0; k < n; k++) {
+        const u = x[k] - x[i], v = [1, u, u * u];
+        for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) S[a][b] += w[k] * v[a] * v[b];
+      }
+      const [[a, b, c], [d2, e, f], [g, h2, k2]] = S;
+      const det = a * (e * k2 - f * h2) - b * (d2 * k2 - f * g) + c * (d2 * h2 - e * g);
+      const r0 = [(e * k2 - f * h2) / det, (c * h2 - b * k2) / det, (b * f - c * e) / det];   // 1.ª fila de S⁻¹
+      L.push(x.map((xk, k) => { const u = xk - x[i]; return w[k] * (r0[0] + r0[1] * u + r0[2] * u * u); }));
+    }
+    const fit = L.map((row) => row.reduce((s, l, k) => s + l * y[k], 0));
+    const rss = y.reduce((s, yi, i) => s + (yi - fit[i]) ** 2, 0);
+    const tr = L.reduce((s, row, i) => s + row[i], 0), trLL = L.reduce((s, row) => s + row.reduce((t, l) => t + l * l, 0), 0);
+    const sigma = Math.sqrt(rss / (n - 2 * tr + trLL));
+    const se = L.map((row) => sigma * Math.sqrt(row.reduce((t, l) => t + l * l, 0)));
+    return { fit, lo: fit.map((f, i) => f - 1.96 * se[i]), hi: fit.map((f, i) => f + 1.96 * se[i]) };
+  }
+  const SUAVE = { temperatura: loess(anios, SERIES.temperatura), precipitacion: loess(anios, SERIES.precipitacion) };
+
+  function dibujarSerie() {
+    const R = estado.res, v = R.v, y = SERIES[v], s = SUAVE[v], svg = $("serie");
+    const W = 760, H = 300, m = { t: 14, r: 14, b: 30, l: 52 };
+    const ymin = Math.min(...y, ...s.lo), ymax = Math.max(...y, ...s.hi), pad = (ymax - ymin) * 0.06;
+    const X = (a) => m.l + (a - primero + 0.5) / (anios.length) * (W - m.l - m.r);
+    const Y = (val) => H - m.b - (val - (ymin - pad)) / (ymax - ymin + 2 * pad) * (H - m.t - m.b);
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+    const el = (tag, at, padre = svg) => { const e = document.createElementNS(NS, tag); for (const n in at) e.setAttribute(n, at[n]); padre.appendChild(e); return e; };
+    const ancho = (W - m.l - m.r) / anios.length;
+
+    // ventanas
+    const bandas = R.falta ? [R.fin] : [R.ini, R.fin];
+    bandas.forEach(([a, b]) => el("rect", { x: X(a) - ancho / 2, y: m.t, width: (b - a + 1) * ancho, height: H - m.t - m.b, fill: "#ecb27d", "fill-opacity": 0.38 }));
+    // rejilla y ejes
+    const paso = v === "temperatura" ? 0.5 : 100, y0 = Math.ceil((ymin - pad) / paso) * paso;
+    const ejes = el("g", { "font-size": 11, fill: "#66563f", "font-family": "Atkinson Hyperlegible, Verdana, sans-serif" });
+    for (let t = y0; t <= ymax + pad; t += paso) {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: "#e2d8c3", "stroke-width": 1 });
+      const tx = el("text", { x: m.l - 6, y: Y(t) + 4, "text-anchor": "end" }, ejes); tx.textContent = fmt(t, v === "temperatura" ? 1 : 0);
+    }
+    for (let a = 1960; a <= ultimo; a += 10) { const tx = el("text", { x: X(a), y: H - 10, "text-anchor": "middle" }, ejes); tx.textContent = a; }
+    const tu = el("text", { x: 14, y: H / 2, "text-anchor": "middle", transform: `rotate(-90 14 ${H / 2})` }, ejes);
+    tu.textContent = v === "temperatura" ? "°C" : "mm al año";
+    // tendencia suavizada con banda
+    const banda = anios.map((a, i) => `${X(a)},${Y(s.hi[i])}`).concat(anios.map((a, i) => `${X(a)},${Y(s.lo[i])}`).reverse());
+    el("polygon", { points: banda.join(" "), fill: "#bfbfbf", "fill-opacity": 0.5 });
+    el("polyline", { points: anios.map((a, i) => `${X(a)},${Y(s.fit[i])}`).join(" "), fill: "none", stroke: "#999999", "stroke-width": 2 });
+    // serie
+    el("polyline", { points: anios.map((a, i) => `${X(a)},${Y(y[i])}`).join(" "), fill: "none", stroke: "#92351e", "stroke-width": 1.5 });
+    anios.forEach((a, i) => el("circle", { cx: X(a), cy: Y(y[i]), r: 2.8, fill: "#92351e" }));
+    // año de nacimiento
+    const nac = Math.max(primero, Math.min(estado.anio, ultimo));
+    el("line", { x1: X(nac), x2: X(nac), y1: m.t, y2: H - m.b, stroke: "#2e2418", "stroke-width": 1.3, "stroke-dasharray": "5 4" });
+    const et = el("text", { x: X(nac) + 5, y: m.t + 12, "font-size": 12, fill: "#2e2418", "font-family": "Pixelify Sans, monospace", "text-anchor": nac > ultimo - 12 ? "end" : "start" });
+    if (nac > ultimo - 12) et.setAttribute("x", X(nac) - 5);
+    et.textContent = "Naciste: " + nac;
+    $("titulo-serie").textContent = v === "temperatura"
+      ? "Temperatura media de México, " + primero + " en adelante"
+      : "Precipitación anual de México, " + primero + " en adelante";
+  }
+
+  function enlaceActual() {
+    const u = new URL(location.href);
+    u.search = "";
+    u.searchParams.set("anio", estado.anio);
+    u.searchParams.set("var", estado.variable === "precipitacion" ? "lluvia" : "temperatura");
+    return u.toString();
+  }
+  function actualizar() {
+    calcular(); dibujar(); textos(); dibujarSerie();
+    try { history.replaceState(null, "", enlaceActual()); } catch (e) { /* p. ej. archivo local */ }
+  }
+
+  // ---- Interacción ----
+  $("anio").addEventListener("input", (e) => {
+    const n = parseInt(e.target.value, 10);
+    if (Number.isFinite(n) && n >= 1900 && n <= ultimo) { estado.anio = n; actualizar(); }
+  });
+  document.querySelectorAll("[data-var]").forEach((b) => b.addEventListener("click", () => {
+    estado.variable = b.dataset.var;
+    document.querySelectorAll("[data-var]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    actualizar();
+  }));
+
+  const tip = $("tip");
+  $("mapa").addEventListener("pointermove", (e) => {
+    const R = estado.res, svg = $("mapa"), box = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal, s = vb.width / box.width;
+    const x = (e.clientX - box.left) * s, y = (e.clientY - box.top) * s;
+    const c = Math.floor((x - M.left) / C), f = Math.floor((y - M.top) / C);
+    const i = porLugar.get(f * nCol + c);
+    if (i === undefined || R.falta || c < 0 || c >= nCol) { tip.style.display = "none"; return; }
+    const u = R.v === "temperatura" ? " °C" : " %";
+    tip.innerHTML = "Columna " + (c + 1) + ", fila " + (f + 1) + "<br>Cambio: " + conSigno(R.cambio[i], 1) + u +
+      "<br>" + fmt(Math.abs(D.lat[i]), 2) + "° N, " + fmt(Math.abs(D.lon[i]), 2) + "° O";
+    const caja = $("bastidor").getBoundingClientRect();
+    tip.style.display = "block";
+    tip.style.left = Math.min(e.clientX - caja.left + 14, caja.width - tip.offsetWidth - 6) + "px";
+    tip.style.top = (e.clientY - caja.top + 14) + "px";
+  });
+  $("mapa").addEventListener("pointerleave", () => { tip.style.display = "none"; });
+
+  const nombre = (ext) => {
+    const R = estado.res;
+    return "gis-stitch_" + R.v + "_" + R.ini.join("-") + "_vs_" + R.fin.join("-") + "." + ext;
+  };
+  const bajar = (blob, archivo) => {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = archivo;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $("imprimir").addEventListener("click", () => window.print());
+
+  // PNG del patrón (lo usan la descarga y el botón de Instagram)
+  function pngDelPatron() {
+    return new Promise((ok) => {
+      const svg = $("mapa"), vb = svg.viewBox.baseVal, esc = 4;
+      const xml = new XMLSerializer().serializeToString(svg);
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement("canvas"); cv.width = vb.width * esc; cv.height = vb.height * esc;
+        const cx = cv.getContext("2d"); cx.fillStyle = "#ffffff"; cx.fillRect(0, 0, cv.width, cv.height);
+        cx.drawImage(img, 0, 0, cv.width, cv.height);
+        cv.toBlob(ok, "image/png");
+      };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+    });
+  }
+  $("png").addEventListener("click", async () => bajar(await pngDelPatron(), nombre("png")));
+
+  // ---- Compartir ----
+  const avisar = (txt) => { $("estado-compartir").textContent = txt; };
+  function mensaje() {
+    const R = estado.res;
+    if (R.falta) return "Mi mapa del clima todavía se está bordando. Calcula el tuyo y llévate el patrón:";
+    const desde = "desde que nací (" + estado.anio + ")";
+    return R.v === "temperatura"
+      ? "México se calentó " + fmt(R.nacional, 1) + " °C " + desde + ". Calcula el tuyo y llévate el patrón para bordarlo:"
+      : "En México llueve " + fmt(Math.abs(R.nacional), 0) + " % " + (R.nacional >= 0 ? "más" : "menos") + " " + desde + ". Calcula el tuyo y llévate el patrón para bordarlo:";
+  }
+  async function copiar(txt) {
+    try { await navigator.clipboard.writeText(txt); return true; }
+    catch (e) {
+      const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand("copy"); } catch (e2) { ok = false; }
+      ta.remove(); return ok;
+    }
+  }
+  $("whatsapp").addEventListener("click", () => {
+    window.open("https://wa.me/?text=" + encodeURIComponent(mensaje() + " " + enlaceActual()), "_blank", "noopener");
+  });
+  $("copiar").addEventListener("click", async () => {
+    avisar((await copiar(enlaceActual())) ? "Enlace copiado." : "No se pudo copiar; copia la dirección de la barra del navegador.");
+  });
+  // Instagram no acepta enlaces desde una página web: en el celular se comparte la imagen
+  // con el menú del sistema; en computadora se descarga la imagen y se copia el enlace.
+  $("instagram").addEventListener("click", async () => {
+    const blob = await pngDelPatron();
+    const archivo = new File([blob], nombre("png"), { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      try { await navigator.share({ files: [archivo], text: mensaje() + " " + enlaceActual() }); avisar(""); return; }
+      catch (e) { if (e.name === "AbortError") return; }
+    }
+    bajar(blob, nombre("png"));
+    const ok = await copiar(enlaceActual());
+    avisar("Descargué la imagen de tu patrón: súbela a Instagram" + (ok ? " y pega el enlace, que ya está copiado." : "."));
+  });
+
+  $("csv").addEventListener("click", () => {
+    const R = estado.res, filas = [["clase", "rango", "color_hex", "hilo_dmc_sugerido", "simbolo_pch", "puntadas"]];
+    R.cl.etiquetas.forEach((t, j) => filas.push([j + 1, t, R.cl.colores[j], R.cl.dmc[j], R.cl.simbolos[j], R.conteo[j]]));
+    const txt = "﻿" + filas.map((f) => f.map((c) => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\n");
+    bajar(new Blob([txt], { type: "text/csv;charset=utf-8" }), nombre("csv"));
+  });
+
+  actualizar();
+})();
+</script>
+</body>
+</html>

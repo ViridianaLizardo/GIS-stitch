@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+# raster originales: viven en el repo "chelsa prep"
+*.tif
+*.nc
+
+# caché de descargas de TerraClimate (03_series_anuales.R)
+data-raw/

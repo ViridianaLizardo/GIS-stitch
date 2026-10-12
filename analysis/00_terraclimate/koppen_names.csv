@@ -1,0 +1,31 @@
+id,name,code,Color (Hex)
+1,Tropical rainforest,Af,#0000FF
+2,Tropical monsoon,Am,#0178FF
+3,Tropical savannah,Aw,#45AAFA
+4,Hot desert,BWh,#FF0000
+5,Cold desert,BWk,#FF9696
+6,Hot steppe,BSh,#F5A500
+7,Cold steppe,BSk,#FFD96A
+8,Temperate climate with dry and hot summer,Csa,#FFFF00
+9,Temperate climate with dry and warm summer,Csb,#C8C800
+10,Temperate climate with dry and cold summer,Csc,#969600
+11,Temperate climate with dry winter and hot summer,Cwa,#96F596
+12,Temperate climate with dry winter and warm summer,Cwb,#63C864
+13,Temperate climate with dry winter and cold summer,Cwc,#319535
+14,Temperate climate with no dry season and hot summer,Cfa,#C8FF50
+15,Temperate climate with no dry season and warm summer,Cfb,#63FF31
+16,Temperate climate with no dry season and cold summer,Cfc,#31C800
+17,Cold climate with dry and hot summer,Dsa,#F000F0
+18,Cold climate with dry and warm summer,Dsb,#C800C8
+19,Cold climate with dry and cold summer,Dsc,#963196
+20,Cold climate with dry summer and very cold winter,Dsd,#966496
+21,Cold climate with dry winter and hot summer,Dwa,#AAAFFF
+22,Cold climate with dry winter and warm summer,Dwb,#5A78D7
+23,Cold climate with dry winter and cold summer,Dwc,#5050B4
+24,Cold climate with dry and very cold winter,Dwd,#3C00A0
+25,Cold climate with no dry season and hot summer,Dfa,#1EDCE6
+26,Cold climate with no dry season and warm summer,Dfb,#46B4E6
+27,Cold climate with no dry season and cold summer,Dfc,#148282
+28,Cold climate with no dry season and very cold winter,Dfd,#145A73
+29,Tundra,ET,#BEBEBE
+30,Frost,EF,#646464
