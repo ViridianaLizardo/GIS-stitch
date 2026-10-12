@@ -1,19 +1,16 @@
 # GIS-stitch
+## Proyecto para el taller *Algoritmos, máquinas y rituales*.
+Un sistema de información geográfica hecho en punto de cruz. Visualiza cuánto cambió el clima de México desde que la fecha de nacimiento de quien lo usa para generar un patrón de punto de cruz: **una celda de 0.5° (unos 55 km) = una puntada**.
 
-Un sistema de información geográfica hecho en punto de cruz. ¿Cuánto cambió el clima de México desde que naciste? Esta página lo calcula y lo convierte en un
-patrón de punto de cruz: **una celda de 0.5° (unos 55 km) = una puntada**.
-
-Proyecto para el taller *Algoritmos, máquinas y rituales*.
-
+**Incluye tres partes:**
+- **Publicación** (`post/clima-en-punto.Rmd`): el método con código y resultados, para el sitio personal.
 - **Página interactiva** (`docs/`): escribes tu año de nacimiento, eliges temperatura o lluvia,
   ves el bordado y descargas el patrón (PDF, PNG, lista de hilos).
-- **Publicación** (`post/clima-en-punto.Rmd`): el método con código y resultados, para el sitio personal.
-- **Pieza bordada**: mi mapa, de 1989 a hoy, hecho a mano.
+- **Pieza bordada**: mapa hecho a mano.
 
-## La regla
-
-Para cada celda: promedio de los **10 años a partir del año de nacimiento** contra el de los
-**últimos 10 años**. Temperatura en °C; lluvia en %.
+## Sobre el cálculo
+Para cada celda se calcula el promedio de los **10 años a partir del año de nacimiento** contra el de los
+**últimos 10 años**. Temperatura en °C; lluvia en %. 
 
 ## Estructura
 

@@ -8,4 +8,3 @@ La página interactiva. GitHub Pages la publica desde esta carpeta
 - `datos.js`: series anuales por celda + clases de color. Lo genera `analysis/03_series_anuales.R`;
   sin él la página muestra un aviso.
 
-Pendiente: registro de la pieza bordada (fotos, horas, hilos).
